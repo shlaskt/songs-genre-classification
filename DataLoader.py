@@ -65,9 +65,10 @@ class DataLoader:
         return data, labels, idx2char, unique_chars, char2idx
 
     @staticmethod
-    def translator(seed, char2idx):
-        parsed = np.zeros(len(seed), dtype=np.bool)
+    def translator(unique_chars, seed, char2idx):
+        parsed = np.zeros((len(seed), len(unique_chars)), dtype=np.bool)
         for i, char in enumerate(seed):
             parsed[i, char2idx[char]] = 1
+        return parsed
 
 
