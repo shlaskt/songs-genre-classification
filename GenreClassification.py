@@ -1,15 +1,7 @@
 from DataLoader import DataLoader
 import random
-import torch
-import torch.nn as nn
+import keras
 import numpy as np
-
-
-
-learning_rate = 2e-5
-batch_size = 32
-hidden_size = 256
-embedding_length = 300
 
 
 def shuffle_data(x, y):
@@ -27,33 +19,33 @@ def split_data(data, labels):
     test_y = labels[cut:]
     return x, y, test, test_y
 
-
-def train(lyrics, labels, lstm, opt):
-    """
-    Trains the model on the train set, using the forward pass of the model,
-    the Cross Entropy Loss (which is NLL + softmax), using Adam as the optimizer.
-    :param train_set: the set to train to model with.
-    :param conv: the model.
-    :param opt: the optimizer (Adam)
-    :param lr_decay: the rate of decay of the learning rate.
-    :param device: CPU or GPU
-    :return: conv (the trained model)
-    """
-    loss_function = nn.CrossEntropyLoss()
-    for epoch in range(10):
-        lstm.train()
-        # print('Epoch: ' + str(epoch))
-        for k, (input, label) in enumerate(zip(lyrics, labels)):
-            prediction = lstm(input)
-            print(prediction)
-            loss = loss_function(prediction, label)
-            opt.zero_grad()
-            loss.backward()
-            opt.step()
+#
+# def train(lyrics, labels, lstm, opt):
+#     """
+#     Trains the model on the train set, using the forward pass of the model,
+#     the Cross Entropy Loss (which is NLL + softmax), using Adam as the optimizer.
+#     :param train_set: the set to train to model with.
+#     :param conv: the model.
+#     :param opt: the optimizer (Adam)
+#     :param lr_decay: the rate of decay of the learning rate.
+#     :param device: CPU or GPU
+#     :return: conv (the trained model)
+#     """
+#     loss_function = nn.CrossEntropyLoss()
+#     for epoch in range(10):
+#         lstm.train()
+#         # print('Epoch: ' + str(epoch))
+#         for k, (input, label) in enumerate(zip(lyrics, labels)):
+#             prediction = lstm(input)
+#             print(prediction)
+#             loss = loss_function(prediction, label)
+#             opt.zero_grad()
+#             loss.backward()
+#             opt.step()
 
 
 def main():
-    data, labels, label_map = DataLoader.parse_data('./Dataset/lyrics15LIN.csv',
+    data, labels, label_map = DataLoader.parse_data_for_classification('./Dataset/lyrics15LIN.csv',
                                                     {'Not Available', '', 'zora sourit', 'Alkebulan', 'Other'})
     data, labels = shuffle_data(data, labels)
     data, labels, valid_data, valid_labels = split_data(data, labels)

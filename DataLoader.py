@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def construct_map(genres):
@@ -14,7 +15,7 @@ def construct_map(genres):
 
 class DataLoader:
     @staticmethod
-    def parse_data(file, to_ignore):
+    def parse_data_for_classification(file, to_ignore):
         lyrics = pd.read_csv(file, delimiter=',')
         lyrics = lyrics[lyrics['lyrics'] != 'instrumental'].dropna()
         lyrics = lyrics[lyrics['lyrics'].map(len) > 1]
@@ -38,4 +39,35 @@ class DataLoader:
         for row in info['lyrics']:
             data_set.append(row)
         return data_set, labels, idx2gen
+
+    @staticmethod
+    def character_encoding(file, genre, max_vec_len, step):
+        songs = pd.read_csv(file, delimiter=',')
+        songs = songs[songs['genre'] == genre]
+        songs = songs[['lyrics', 'genre']]
+        text = ''
+        for row in songs['lyrics']:
+            text = text + str(row).lower()
+        unique_chars = sorted(list(set(text)))
+        char2idx = dict((c, i) for i, c in enumerate(unique_chars))
+        idx2char = dict((i, c) for i, c in enumerate(unique_chars))
+        sentences = []
+        next_chars = []
+        for i in range(0, len(text) - max_vec_len, step):
+            sentences.append(text[i: i + max_vec_len])
+            next_chars.append(text[i + max_vec_len])
+        data = np.zeros((len(sentences), max_vec_len, len(unique_chars)), dtype=np.bool)
+        labels = np.zeros((len(sentences), len(unique_chars)), dtype=np.bool)
+        for i, sentence in enumerate(sentences):
+            for t, char in enumerate(sentence):
+                data[i, t, char2idx[char]] = 1
+            labels[i, char2idx[next_chars[i]]] = 1
+        return data, labels, idx2char, unique_chars, char2idx
+
+    @staticmethod
+    def translator(seed, char2idx):
+        parsed = np.zeros(len(seed), dtype=np.bool)
+        for i, char in enumerate(seed):
+            parsed[i, char2idx[char]] = 1
+
 
