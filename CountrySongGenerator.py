@@ -17,6 +17,7 @@ class Constants(Enum):
 
 def predict(model, seed, char2idx, idx2char, unique_chars):
     pattern = DataLoader.translator(unique_chars, seed, char2idx)
+    res = '' + seed
     for i in range(1000):
         x = np.reshape(pattern, (1, len(pattern), len(unique_chars)))
         # x = x / float(len(unique_chars))
@@ -24,15 +25,16 @@ def predict(model, seed, char2idx, idx2char, unique_chars):
         index = np.argmax(prediction)
         result = idx2char[index]
         # seq_in = [idx2char[value] for value in pattern]
-        print(result)
+        res += result
         seq = np.zeros((1, len(unique_chars)), dtype=bool)
         seq[0, index] = 1
         pattern = np.concatenate((pattern, seq))
         pattern = pattern[1:]
+    print(res)
 
 
 def main():
-    data, labels, idx2char, unique_chars, char2idx = DataLoader.character_encoding('./Dataset/lyrics.csv', 'Country',
+    data, labels, idx2char, unique_chars, char2idx = DataLoader.character_encoding('./Dataset/lyrics15LIN.csv', 'Country',
                                          Constants.max_vec_len.value, Constants.step.value)
     num_of_chars = len(unique_chars)
     model = Sequential()
@@ -41,8 +43,7 @@ def main():
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer=optimizers.RMSprop(lr=0.01))
     model.fit(data, labels, batch_size=128, epochs=1)
-    predict(model, 'sweet home alabama i', char2idx, idx2char, unique_chars)
-    print('hello')
+    predict(model, 'country road take me', char2idx, idx2char, unique_chars)
 
 
 if __name__ == "__main__":
