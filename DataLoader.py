@@ -34,10 +34,14 @@ class DataLoader:
         info.index = pd.RangeIndex(len(info.index))
         data_set = []
         labels = info['genre'].tolist()
+        data = info['lyrics'].tolist()
         gen2idx, idx2gen = construct_map(info['genre'].dropna().drop_duplicates().tolist())
         labels = [gen2idx[label] for label in labels]
-        for row in info['lyrics']:
-            data_set.append(row)
+        for row in data:
+            song = []
+            for word in row.split(' '):
+                song.append(word)
+            data_set.append(song)
         return data_set, labels, idx2gen
 
     @staticmethod
