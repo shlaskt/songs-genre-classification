@@ -45,6 +45,12 @@ class DataLoader:
         songs = pd.read_csv(file, delimiter=',')
         songs = songs[songs['genre'] == genre]
         songs = songs[['lyrics', 'genre']]
+        to_replace = {'[^\w\s]', ':', ',', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9',
+                      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+        songs['lyrics'] = songs['lyrics'].str.strip('[]')
+        songs['lyrics'] = songs['lyrics'].str.strip('()')
+        for token in to_replace:
+            songs['lyrics'] = songs['lyrics'].str.replace(token, '')
         text = ''
         for row in songs['lyrics']:
             text = text + str(row).lower()
@@ -62,6 +68,7 @@ class DataLoader:
             for t, char in enumerate(sentence):
                 data[i, t, char2idx[char]] = 1
             labels[i, char2idx[next_chars[i]]] = 1
+        print(unique_chars)
         return data, labels, idx2char, unique_chars, char2idx
 
     @staticmethod

@@ -13,6 +13,7 @@ from enum import Enum
 class Constants(Enum):
     max_vec_len = 20
     step = 1
+    epochs = 3
 
 
 def predict(model, seed, char2idx, idx2char, unique_chars):
@@ -41,8 +42,8 @@ def main():
     model.add(LSTM(128, input_shape=(Constants.max_vec_len.value, num_of_chars)))
     model.add(Dense(num_of_chars))
     model.add(Activation('softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer=optimizers.RMSprop(lr=0.01))
-    model.fit(data, labels, batch_size=128, epochs=1)
+    model.compile(loss='categorical_crossentropy', optimizer=optimizers.Adam(lr=0.01))
+    model.fit(data, labels, batch_size=128, epochs=Constants.epochs.value)
     predict(model, 'country road take me', char2idx, idx2char, unique_chars)
 
 
