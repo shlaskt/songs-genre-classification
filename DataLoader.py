@@ -15,7 +15,7 @@ def construct_map(genres):
 
 class DataLoader:
     @staticmethod
-    def parse_data_for_classification(file, to_ignore):
+    def parse_data_for_classification(file, to_ignore, is_limit = False):
         lyrics = pd.read_csv(file, delimiter=',')
         lyrics = lyrics[lyrics['lyrics'] != 'instrumental'].dropna()
         lyrics = lyrics[lyrics['lyrics'].map(len) > 1]
@@ -41,7 +41,13 @@ class DataLoader:
             song = []
             for word in row.split(' '):
                 song.append(word)
+            if (is_limit):
+                if len(song) < 200:
+                    song += (["<pad>"] * (200 - len(song)))
+                elif len(song) > 200:
+                    song = song[:200]
             data_set.append(song)
+
         return data_set, labels, idx2gen
 
     @staticmethod
