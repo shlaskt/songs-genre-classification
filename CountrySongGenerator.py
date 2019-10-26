@@ -1,4 +1,4 @@
-from DataLoader import DataLoader
+from DataUtils import DataUtils
 from keras.models import Sequential
 from keras.layers import LSTM, Activation
 from keras.layers import Dense
@@ -12,7 +12,7 @@ word_count = 1000
 
 
 def predict(model, seed, char2idx, idx2char, unique_chars):
-    pattern = DataLoader.translator(unique_chars, seed, char2idx)
+    pattern = DataUtils.translator(unique_chars, seed, char2idx)
     res = '' + seed
     for i in range(word_count):
         x = np.reshape(pattern, (1, len(pattern), len(unique_chars)))
@@ -28,7 +28,7 @@ def predict(model, seed, char2idx, idx2char, unique_chars):
 
 
 def main():
-    data, labels, idx2char, unique_chars, char2idx = DataLoader.character_encoding('./Dataset/lyrics15LIN.csv',
+    data, labels, idx2char, unique_chars, char2idx = DataUtils.character_encoding('./Dataset/lyrics15LIN.csv',
                                                                                    'Country', max_vec_len, step)
     num_of_chars = len(unique_chars)
     model = Sequential()

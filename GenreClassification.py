@@ -1,4 +1,4 @@
-from DataLoader import DataLoader as Loader
+from DataUtils import DataUtils
 from torch.utils.data import DataLoader, random_split
 from Lstm import Lstm
 import numpy as np
@@ -89,20 +89,6 @@ def time_for_epoch(start, end):
     return minutes, seconds
 
 
-def convert_to_one_hot(genre, vec_size):
-    vec = np.zeros(vec_size)
-    vec[genre] = 1
-    vec = [int(val) for val in vec]
-    return vec
-
-
-def convert_labels_representation(labels, size):
-    vectors = []
-    for label in labels:
-        vectors.append(convert_to_one_hot(label, size))
-    return vectors
-
-
 def iterate_model(model, train_loader, val_loader):
     optimizer = optim.Adam(model.parameters())
     criterion = nn.MultiLabelSoftMarginLoss()
@@ -118,7 +104,7 @@ def iterate_model(model, train_loader, val_loader):
 
 
 def main():
-    data, labels, label_map = Loader.parse_data_for_classification('./Dataset/lyrics15LIN.csv',
+    data, labels, label_map = DataUtils.parse_data_for_classification('./Dataset/lyrics15LIN.csv',
                                                                    {'Not Available', '', 'Other'}, True)
     name = 'lyrics15'
     # for training w2v model
@@ -128,16 +114,16 @@ def main():
     w2v.wv["<pad>"] = np.zeros(embedded_dim, )
     num_of_clusters = len(label_map)
     # replace labels to one-hot vectors
-    vec_labels = convert_labels_representation(labels, num_of_clusters)
+    one_hot_labels = DataUtils.convert_representation(labels, num_of_clusters)
     # make dataset to tuples of (tensor(songs), tensor(vet one-hot))
-    dataset = SongData(data, vec_labels, w2v)
+    dataset = SongData(data, one_hot_labels, w2v)
     # create train and test set
     train_len = int(0.7 * len(dataset))
     val_len = len(dataset) - train_len
     train_set, val_set = random_split(dataset, [train_len, val_len])
     # create LSTM Rnn model
     lstm = Lstm(batch_size=1, output_size=num_of_clusters, hidden_size=hidden_layer,
-                vocab_size=len(w2v.wv.vocab), embedding_length=embedded_dim, weights= w2v.wv.vectors)
+                vocab_size=len(w2v.wv.vocab), embedding_length=embedded_dim, weights=w2v.wv.vectors)
     iterate_model(lstm, DataLoader(train_set, batch_size=1, shuffle=True),
                   DataLoader(val_set, batch_size=1, shuffle=True))
 

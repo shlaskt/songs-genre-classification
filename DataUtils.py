@@ -22,6 +22,13 @@ def cleaner(file, to_replace, genre_filter, arg):
     return songs
 
 
+def convert_to_one_hot(val, vec_size):
+    vec = np.zeros(vec_size)
+    vec[val] = 1
+    vec = [int(val) for val in vec]
+    return vec
+
+
 def ignorer(df, to_ignore):
     for key in to_ignore:
         df = df[df['genre'] != key]
@@ -33,7 +40,7 @@ def genre_selector(df, genre):
     return df
 
 
-class DataLoader:
+class DataUtils:
     @staticmethod
     def parse_data_for_classification(file, to_ignore, is_limit=False):
         info = cleaner(file, {'chorus', '[^\w\s]', ':', ',', 'verse',
@@ -58,6 +65,13 @@ class DataLoader:
             data_set.append(song)
 
         return data_set, labels, idx2gen
+
+    @staticmethod
+    def convert_representation(data, vec_size):
+        vectors = []
+        for val in data:
+            vectors.append(convert_to_one_hot(val, vec_size))
+        return vectors
 
     @staticmethod
     def character_encoding(file, genre, max_vec_len, step):
