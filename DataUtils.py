@@ -43,17 +43,17 @@ def genre_selector(df, genre):
 class DataUtils:
     @staticmethod
     def parse_data_for_classification(file, to_ignore, is_limit=False):
-        info = cleaner(file, {'chorus', '[^\w\s]', ':', ',', 'verse',
+        data = cleaner(file, {'chorus', '[^\w\s]', ':', ',', 'verse',
                               'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9',
                               '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}, ignorer, to_ignore)
-        info = info.replace({'\n': ' '}, regex=True)
-        info.index = pd.RangeIndex(len(info.index))
-        data_set = []
-        labels = info['genre'].tolist()
-        data = info['lyrics'].tolist()
-        gen2idx, idx2gen = construct_dict_encoders(info['genre'].dropna().drop_duplicates().tolist())
+        data = data.replace({'\n': ' '}, regex=True)
+        data.index = pd.RangeIndex(len(data.index))
+        songs = []
+        labels = data['genre'].tolist()
+        lyrics = data['lyrics'].tolist()
+        gen2idx, idx2gen = construct_dict_encoders(data['genre'].dropna().drop_duplicates().tolist())
         labels = [gen2idx[label] for label in labels]
-        for row in data:
+        for row in lyrics:
             song = []
             for word in row.split(' '):
                 song.append(word)
@@ -62,9 +62,9 @@ class DataUtils:
                     song += (["<pad>"] * (200 - len(song)))
                 elif len(song) > 200:
                     song = song[:200]
-            data_set.append(song)
+            songs.append(song)
 
-        return data_set, labels, idx2gen
+        return songs, labels, idx2gen
 
     @staticmethod
     def convert_representation(data, vec_size):
