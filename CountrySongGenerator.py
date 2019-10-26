@@ -1,23 +1,20 @@
 from DataLoader import DataLoader
 from keras.models import Sequential
-from keras.layers import LSTM, Dropout, GlobalMaxPooling1D, Activation
+from keras.layers import LSTM, Activation
 from keras.layers import Dense
 from keras import optimizers
 import numpy as np
-from enum import Enum
 
-
-class Constants(Enum):
-    max_vec_len = 20
-    step = 1
-    epochs = 3
-    word_count = 1000
+max_vec_len = 20
+step = 1
+epochs = 3
+word_count = 1000
 
 
 def predict(model, seed, char2idx, idx2char, unique_chars):
     pattern = DataLoader.translator(unique_chars, seed, char2idx)
     res = '' + seed
-    for i in range(Constants.word_count.value):
+    for i in range(word_count):
         x = np.reshape(pattern, (1, len(pattern), len(unique_chars)))
         prediction = model.predict(x, verbose=0)
         index = np.argmax(prediction)
@@ -31,15 +28,15 @@ def predict(model, seed, char2idx, idx2char, unique_chars):
 
 
 def main():
-    data, labels, idx2char, unique_chars, char2idx = DataLoader.character_encoding('./Dataset/lyrics15LIN.csv', 'Country',
-                                         Constants.max_vec_len.value, Constants.step.value)
+    data, labels, idx2char, unique_chars, char2idx = DataLoader.character_encoding('./Dataset/lyrics15LIN.csv',
+                                                                                   'Country', max_vec_len, step)
     num_of_chars = len(unique_chars)
     model = Sequential()
-    model.add(LSTM(128, input_shape=(Constants.max_vec_len.value, num_of_chars)))
+    model.add(LSTM(128, input_shape=(max_vec_len, num_of_chars)))
     model.add(Dense(num_of_chars))
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer=optimizers.RMSprop(lr=0.01))
-    model.fit(data, labels, batch_size=128, epochs=Constants.epochs.value)
+    model.fit(data, labels, batch_size=128, epochs=epochs)
     predict(model, 'country road take me', char2idx, idx2char, unique_chars)
 
 

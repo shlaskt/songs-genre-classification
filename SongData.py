@@ -3,8 +3,6 @@ import torch
 
 
 class SongData(Dataset):
-    """Face Landmarks dataset."""
-
     def __init__(self, lyrics, labels, w2v):
         self.texts = lyrics
         self.labels = labels
@@ -15,11 +13,6 @@ class SongData(Dataset):
 
     def __getitem__(self, idx):
         text = self.texts[idx]
-        # text = tokenizer(text)
         text = [self.w2v.wv.vocab[word].index for word in text if word in self.w2v.wv.vocab]
         label = self.labels[idx]
-
-        sample = (torch.tensor(text, dtype=torch.long), torch.tensor(label, dtype=torch.long))
-
-
-        return sample
+        return torch.tensor(text, dtype=torch.long), torch.tensor(label, dtype=torch.long)

@@ -1,9 +1,7 @@
 from DataLoader import DataLoader as Loader
-from torch.utils.data import Dataset, DataLoader, random_split
+from torch.utils.data import DataLoader, random_split
 from Lstm import Lstm
-import random
 import numpy as np
-import gensim
 import logging
 import pandas as pd
 import nltk
@@ -50,11 +48,11 @@ def get_accuracy(prediction, y):
     return acc
 
 
-def train(model, loader, optimizer, criterion):
+def train(model, loader, optimizer, criterion, epoch):
     epoch_loss = 0
     epoch_acc = 0
     model.train()
-
+    print(f'Epoch: {epoch + 1:02} | Starting Training...')
     for index, batch in enumerate(loader):
         optimizer.zero_grad()
         predictions = model(batch[0]).squeeze(1)
@@ -64,13 +62,14 @@ def train(model, loader, optimizer, criterion):
         optimizer.step()
         epoch_loss += loss.item()
         epoch_acc += acc.item()
+    print(f'Epoch: {epoch + 1:02} | Finished Training')
     return epoch_loss / len(loader), epoch_acc / len(loader)
 
 
-def evaluate(model, loader, criterion):
+def evaluate(model, loader, criterion, epoch):
     epoch_loss = 0
     epoch_acc = 0
-    print("in eval")
+    print(f'Epoch: {epoch + 1:02} | Starting Evaluation...')
     model.eval()
     with torch.no_grad():
         for index, batch in enumerate(loader):
@@ -79,63 +78,40 @@ def evaluate(model, loader, criterion):
             acc = get_accuracy(predictions, batch[1])
             epoch_loss += loss.item()
             epoch_acc += acc.item()
-    print("out eval")
+    print(f'Epoch: {epoch + 1:02} | Finished Evaluation')
     return epoch_loss / len(loader), epoch_acc / len(loader)
 
 
 def time_for_epoch(start, end):
-    time = end - start
-    minuts = int(time / 60)
-    seconds = int(time - (minuts * 60))
-    return minuts, seconds
+    end_to_end = end - start
+    minutes = int(end_to_end / 60)
+    seconds = int(end_to_end - (minutes * 60))
+    return minutes, seconds
 
 
-def genre_2_onehot(genre, vec_size):
+def convert_to_one_hot(genre, vec_size):
     vec = np.zeros(vec_size)
     vec[genre] = 1
     vec = [int(val) for val in vec]
     return vec
 
 
-def genres_2_vectors(labels, size):
-    vec_size = size
+def convert_labels_representation(labels, size):
     vectors = []
-    for i in labels:
-        vectors.append(genre_2_onehot(i, vec_size))
+    for label in labels:
+        vectors.append(convert_to_one_hot(label, size))
     return vectors
 
 
 def iterate_model(model, train_loader, val_loader):
     optimizer = optim.Adam(model.parameters())
     criterion = nn.MultiLabelSoftMarginLoss()
-
-    best_val_loss = float('inf')
-
-    all_train_losses = []
-    all_val_losses = []
-    train_accuracy = []
-    val_accuracy = []
-
     for epoch in range(num_of_epochs):
-
         start_time = time.time()
-
-        train_loss, train_acc = train(model, train_loader, optimizer, criterion)
-        all_train_losses.append(train_loss)
-        train_accuracy.append(train_acc)
-
-        val_loss, val_acc = evaluate(model, val_loader, criterion)
-        all_val_losses.append(val_loss)
-        val_accuracy.append(val_acc)
-
+        train_loss, train_acc = train(model, train_loader, optimizer, criterion, epoch)
+        val_loss, val_acc = evaluate(model, val_loader, criterion, epoch)
         end_time = time.time()
-
         epoch_mins, epoch_secs = time_for_epoch(start_time, end_time)
-
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            torch.save(model.state_dict(), 'best-model.model')
-
         print(f'Epoch: {epoch + 1:02} | Epoch Time: {epoch_mins}m {epoch_secs}s')
         print(f'\tTrain Loss: {train_loss:.3f} | Train Acc: {train_acc * 100:.2f}%')
         print(f'\t Val. Loss: {val_loss:.3f} |  Val. Acc: {val_acc * 100:.2f}%')
@@ -146,13 +122,13 @@ def main():
                                                                    {'Not Available', '', 'Other'}, True)
     name = 'lyrics15'
     # for training w2v model
-    # word2vec(data, name)
+    word2vec(data, name)
     to_open = "./Dataset/" + name
     w2v = Word2Vec.load(to_open)
     w2v.wv["<pad>"] = np.zeros(embedded_dim, )
     num_of_clusters = len(label_map)
     # replace labels to one-hot vectors
-    vec_labels = genres_2_vectors(labels, num_of_clusters)
+    vec_labels = convert_labels_representation(labels, num_of_clusters)
     # make dataset to tuples of (tensor(songs), tensor(vet one-hot))
     dataset = SongData(data, vec_labels, w2v)
     # create train and test set
