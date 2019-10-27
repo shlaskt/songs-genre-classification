@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import re
 
 
 def construct_dict_encoders(unique_items):
@@ -8,17 +9,14 @@ def construct_dict_encoders(unique_items):
     return item2idx, idx2item
 
 
-def cleaner(file, to_replace, genre_filter, arg):
+def cleaner(file, genre_filter, arg):
     df = pd.read_csv(file, delimiter=',')
     df = df[df['lyrics'] != 'instrumental'].dropna()
     df = df[df['lyrics'].map(len) > 1]
     df = genre_filter(df, arg)
     data = df[['lyrics', 'genre']]
     songs = data.sample(len(data))
-    songs['lyrics'] = songs['lyrics'].str.strip('[]')
-    songs['lyrics'] = songs['lyrics'].str.strip('()')
-    for token in to_replace:
-        songs['lyrics'] = songs['lyrics'].str.replace(token, '')
+    songs['lyrics'] = [re.sub(r'[^a-zA-Z0-9\' \n]', "", song) for song in songs['lyrics']]
     return songs
 
 
@@ -43,9 +41,7 @@ def genre_selector(df, genre):
 class DataUtils:
     @staticmethod
     def parse_data_for_classification(file, to_ignore, is_limit=False):
-        data = cleaner(file, {'chorus', '[^\w\s]', ':', ',', 'verse',
-                              'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9',
-                              '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}, ignorer, to_ignore)
+        data = cleaner(file, ignorer, to_ignore)
         data = data.replace({'\n': ' '}, regex=True)
         data.index = pd.RangeIndex(len(data.index))
         songs = []
@@ -75,9 +71,7 @@ class DataUtils:
 
     @staticmethod
     def character_encoding(file, genre, max_vec_len, step):
-        to_replace = {'[^\w\s]', ':', ',', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9',
-                      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
-        songs = cleaner(file, to_replace, genre_selector, genre)
+        songs = cleaner(file, genre_selector, genre)
         text = ''
         for row in songs['lyrics']:
             text = text + str(row).lower()
@@ -102,5 +96,3 @@ class DataUtils:
         for i, char in enumerate(seed):
             parsed[i, char2idx[char]] = 1
         return parsed
-
-
