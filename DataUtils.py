@@ -96,3 +96,5 @@ class DataUtils:
         for i, char in enumerate(seed):
             parsed[i, char2idx[char]] = 1
         return parsed
+
+

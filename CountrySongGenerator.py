@@ -7,8 +7,8 @@ import numpy as np
 
 max_vec_len = 20
 step = 1
-epochs = 3
-word_count = 1000
+epochs = 20
+word_count = 600
 
 
 def predict(model, seed, char2idx, idx2char, unique_chars):
@@ -29,14 +29,15 @@ def predict(model, seed, char2idx, idx2char, unique_chars):
 
 def main():
     data, labels, idx2char, unique_chars, char2idx = DataUtils.character_encoding('./Dataset/lyrics15LIN.csv',
-                                                                                   'Country', max_vec_len, step)
+                                                                                  'Country', max_vec_len, step)
     num_of_chars = len(unique_chars)
     model = Sequential()
     model.add(LSTM(128, input_shape=(max_vec_len, num_of_chars)))
     model.add(Dense(num_of_chars))
     model.add(Activation('softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer=optimizers.RMSprop(lr=0.01))
+    model.compile(loss='categorical_crossentropy', optimizer=optimizers.RMSprop(lr=0.001))
     model.fit(data, labels, batch_size=128, epochs=epochs)
+    model.save('./Dataset/15k-30epoch')
     predict(model, 'country road take me', char2idx, idx2char, unique_chars)
 
 
